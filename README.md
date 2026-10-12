@@ -1,73 +1,93 @@
-# React + TypeScript + Vite
+# lunev-portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Портфолио Никиты Лунева, frontend-разработчика. Сайт выглядит как терминал на старом ЭЛТ-мониторе: загрузочный экран, сканлайны, шум и портрет, собранный из ASCII-символов.
 
-Currently, two official plugins are available:
+Живая версия: https://kasstel.github.io/lunev-portfolio/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Если вы пришли посмотреть, как это сделано, ниже короткая карта: что где лежит и с каких файлов интереснее начать.
 
-## React Compiler
+## Запуск
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Нужен Node 22, на нём же собирается деплой.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Команда | Что делает |
+| --- | --- |
+| `npm run dev` | дев-сервер Vite с HMR |
+| `npm run build` | проверка типов и сборка в `dist/` |
+| `npm run preview` | локальный просмотр собранной версии |
+| `npm run lint` | ESLint |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Из чего собрано
+
+React 19, TypeScript и Vite. Стили написаны на CSS Modules, UI-библиотек нет. Вся графика нарисована на Canvas 2D и в SVG, без WebGL и без библиотек для эффектов.
+
 ```
+src/
+  pages/          секции страницы: Hero, Projects, About, Contact
+  components/
+    boot/         загрузочный экран
+    crt/          слои ЭЛТ-эффекта поверх всей страницы
+    hero/         ASCII-портрет, «полёт над городом», радар
+    works/        карточка работы и её процедурный фон
+    layout/       верхняя HUD-панель
+    ui/           Panel, TermButton, Typewriter, DraggableWindow
+  styles/         дизайн-токены и глобальные стили
+public/
+  portrait.jpg    исходник для ASCII-портрета
+  works/          видео-превью работ
+```
+
+Это одна страница без роутера: `App.tsx` показывает загрузочный экран, а после него секции по порядку.
+
+## С чего начать чтение
+
+**[PortraitCanvas.tsx](src/components/hero/PortraitCanvas.tsx)** — ASCII-портрет. Фотография рисуется в скрытый canvas, на каждом кадре для каждой ячейки 8×12 берётся яркость пикселя и по ней выбирается символ из строки `` ' .`-:;~+*=xX%#@' ``. Сверху накладываются «дыхание» синусом, затемнение каждой третьей строки и редкие красные символы-помехи. Кадрирование повторяет `object-fit: cover`, поэтому при наведении настоящая фотография проявляется точно на месте ASCII-версии. Анимация останавливается, когда портрет уходит с экрана. Если фото не загрузилось, рисуется процедурный силуэт.
+
+**[CrtOverlay.tsx](src/components/crt/CrtOverlay.tsx)** — шесть слоёв поверх страницы: свечение, сканлайны, виньетка, бегущая полоса, шум и «перекат» кадра. Пять из них сделаны на CSS. Шум рисуется на canvas в половинном разрешении и обновляется через кадр, чтобы не грузить процессор ([NoiseCanvas.tsx](src/components/crt/NoiseCanvas.tsx)).
+
+**[WorkCard.tsx](src/components/works/WorkCard.tsx)** — карточка работы. На десктопе видео-превью играет, пока курсор над карточкой. На тач-устройствах наведения нет, поэтому там видео запускается, когда карточка хотя бы наполовину видна на экране.
+
+**[WorkCardCanvas.tsx](src/components/works/WorkCardCanvas.tsx)** — фон карточки под видео. Узор зависит от номера карточки: псевдослучайные числа берутся от сида, поэтому у каждой работы он свой и не меняется между перезагрузками. Стилей пять, они идут по кругу.
+
+**[ReelCanvas.tsx](src/components/hero/ReelCanvas.tsx)** — каркасный город с перспективной сеткой и 120 «зданиями», летящими на камеру.
+
+**[BootScreen.tsx](src/components/boot/BootScreen.tsx)** — загрузочный экран. Строки появляются со случайной задержкой, клик в любом месте его пропускает.
+
+## Как добавить работу
+
+1. Положите исходное видео в `public/works/originals/`. Эта папка в `.gitignore`, тяжёлые исходники в репозиторий не попадают.
+2. Сожмите его до 720p без звука:
+
+   ```bash
+   ffmpeg -i public/works/originals/demo.mp4 -an -vf "scale=1280:720" -r 30 \
+     -c:v libx264 -preset slow -crf 28 -pix_fmt yuv420p -movflags +faststart \
+     public/works/demo.mp4
+   ```
+
+3. Добавьте `<WorkCard />` в [Projects.tsx](src/pages/Projects.tsx) и поправьте число в заголовке секции.
+
+Размер карточки задаётся пропсом `size`. Сетка состоит из 12 колонок: `lg` занимает половину ряда, `md` треть, `sm` четверть, `full` весь ряд.
+
+## Настройка внешнего вида
+
+Цвета, шрифты, отступы и z-index слоёв собраны в [variables.css](src/styles/variables.css). Там же три переменные, которыми регулируется сила эффектов:
+
+| Переменная | На что влияет |
+| --- | --- |
+| `--scanline-opacity` | плотность сканлайнов и яркость бегущей полосы |
+| `--noise-opacity` | заметность шума |
+| `--glitch` | частота глитча на заголовках и карточках, чем больше, тем чаще |
+
+## Деплой
+
+Пуш в `main` запускает [deploy.yml](.github/workflows/deploy.yml): проект собирается и публикуется на GitHub Pages. В `vite.config.ts` стоит относительный `base: './'`, поэтому сборка работает и в подпапке, и в корне домена, и имя репозитория в конфиге не прописано.
+
+## Связь
+
+Telegram: [@kasstel03](https://t.me/kasstel03)
+GitHub: [Kasstel](https://github.com/Kasstel)
