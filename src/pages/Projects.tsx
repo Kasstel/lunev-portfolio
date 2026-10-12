@@ -47,7 +47,7 @@ export function Projects() {
           index="03"
           title="WORKS.DB"
           jp="作品 / 事例集"
-          rightTop="QUERY: ALL · 3 RESULTS"
+          rightTop="QUERY: SPECIAL CASES · 4 RESULTS"
           rightBottom="SORT: REVERSE-CHRONOLOGICAL"
         />
 
@@ -72,6 +72,12 @@ export function Projects() {
             tags={['REACT', 'TS', 'FSD']}
             videoSrc={`${import.meta.env.BASE_URL}works/skillswap.mp4`}
             href="https://kasstel.github.io/SkillSwap/"
+          />
+          <WorkCard index={3} size="md" number="№ 004" caseLabel="CASE-D"
+            title="COSMO BURGERS"
+            description="Сайт для бургерной Cosmo Burgers с меню, конструктором и отслеживанием заказа. Одностраничное приложение, в котором можно выбрать готовый бургер или собрать свой из 40 ингредиентов."
+            tags={['SPA', 'CONSTRUCTOR', 'ORDER TRACKING']}
+            href="https://kasstel.github.io/burger-shop/"
           />
         </div>
       </section>
