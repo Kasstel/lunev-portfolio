@@ -53,10 +53,18 @@ export function Typewriter({ text, delay = 0, speed = 18, className = '', onComp
     return () => clearTimeout(timeoutId);
   }, [text, speed, started]);
 
+  // Invisible full-text copy reserves the final size up front,
+  // so typing doesn't reflow surrounding layout.
   return (
-    <span className={className}>
-      {displayed}
-      {!done && <span className="caret" />}
+    <span className={className} style={{ display: 'grid' }}>
+      <span aria-hidden="true" style={{ gridArea: '1 / 1', visibility: 'hidden' }}>
+        {text}
+        <span className="caret" />
+      </span>
+      <span style={{ gridArea: '1 / 1' }}>
+        {displayed}
+        {!done && <span className="caret" />}
+      </span>
     </span>
   );
 }
